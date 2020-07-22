@@ -2,6 +2,7 @@ package board;
 
 import java.util.ArrayList;
 import java.util.Scanner;
+import test.Test;
 
 public class board1 {
 
@@ -11,6 +12,8 @@ public class board1 {
 
 		Scanner sc = new Scanner(System.in);
 		String cmd = " ";
+		
+		
 		int No = 1;
 		int targetNo;
 		String all;
@@ -41,6 +44,9 @@ public class board1 {
 				article.body = sc.nextLine();
 				System.out.println("작성자를 입력하세요 : ");
 				article.witer = sc.nextLine();
+				
+				article.date = Test.getCurrentDate();
+				
 
 				articles.add(article);
 				System.out.println(No + "번 게시물이 등록되었습니다.");
@@ -60,6 +66,10 @@ public class board1 {
 						System.out.println("제목 : " + articles.get(i).title);
 						System.out.println("내용 : " + articles.get(i).body);
 						System.out.println("작성자 : " + articles.get(i).witer);
+						
+						String str = articles.get(i).date;
+						String[] arr = str.split(" ");
+						System.out.println("작성일 : "+arr[0]);
 					}
 				} else {
 
@@ -67,6 +77,9 @@ public class board1 {
 					System.out.println("제목 : " + targetArticle.title);
 					System.out.println("내용 : " + targetArticle.body);
 					System.out.println("작성자 : " + targetArticle.witer);
+					String str = targetArticle.date;
+					String[] arr = str.split(" ");
+					System.out.println("작성일 : "+arr[0]);
 				}
 			}
 
@@ -144,14 +157,16 @@ public class board1 {
 			}
 		}
 		return article;
+		
 	}
 
 }
 
 class Article {
-	String title = " ";
-	String body = " ";
-	String witer = " ";
-	int No = 1;
+	String title;
+	String body;
+	String witer;
+	int No;
+	String date;
 
 }
