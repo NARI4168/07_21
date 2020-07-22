@@ -168,5 +168,18 @@ class Article {
 	String witer;
 	int No;
 	String date;
+	
+	Article(){
+		
+	}
+	
+	Article(int No, String title, String body, String witer, String date){
+		this.No = No;
+		this.title = title;
+		this.body = body;
+		this.witer = witer;
+		this.date = date;
+		
+	}
 
 }
