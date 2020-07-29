@@ -3,12 +3,16 @@ package board;
 import java.util.ArrayList;
 import java.util.Scanner;
 import test.Test;
+import java.util.HashMap;
 
 public class board1 {
 
-	static ArrayList<Article> articles = new ArrayList<Article>();
+	ArrayList<Article> articles = new ArrayList<Article>();
+	ArrayList<Reply> replies = new ArrayList<Reply>();
+	int lastArticleNo = 0; // 게시물 번호 관리용
+	int lastReplyNo = 0;  // 댓글 번호 관리용
 
-	public static void main(String[] args) {
+	void start() {
 
 		Scanner sc = new Scanner(System.in);
 		String cmd = " ";
@@ -17,22 +21,9 @@ public class board1 {
 		String all;
 		int No = 4;
 		
-		Article article1 = new Article();
-		article1.No =1;
-		article1.title = "제목1";
-		article1.body = "내용1";
-		article1.witer = "작성자1";
-		article1.date = Test.getCurrentDate();
-		article1.hit =20;
-		
-		Article article2 = new Article(2, "제목2", "내용2","작성자2",Test.getCurrentDate(),5);
-		Article article3 = new Article(3, "제목3", "내용3","작성자3",Test.getCurrentDate(),30);
-		
-        articles.add(article1);
-        articles.add(article2);
-        articles.add(article3);
-		
-		
+		make_test_data();
+		print_articles(articles);
+
 		while (true) {
 			System.out.println("====명령어를 입력하세요 : ");
 			cmd = sc.nextLine();
@@ -53,7 +44,8 @@ public class board1 {
 
 			if (cmd.equals("add")) {
 				Article article = new Article();
-				article.No = No;
+				article.No = lastArticleNo;
+				lastArticleNo++;
 
 				System.out.println("제목을 입력하세요 : ");
 				article.title = sc.nextLine();
@@ -74,8 +66,7 @@ public class board1 {
 
 				targetNo = Integer.parseInt(sc.nextLine());
 				Article targetArticle = get_article_by_No(targetNo);
-				
-				
+
 				if (targetArticle == null) {
 					System.out.println("존재하지 않는 게시물입니다. 전체를 불러옵니다.");
 //					for (int i = 0; i < articles.size(); i++) {
@@ -89,22 +80,23 @@ public class board1 {
 //						System.out.println("작성일 : " + arr[0]);
 //						
 //						System.out.println("조회수 : " + articles.get(i).hit);
-						
-					 print_articles(articles);
-						
-					}
-				//} else {
 
-					System.out.println("번호 : " + targetArticle.No);
-					System.out.println("제목 : " + targetArticle.title);
-					System.out.println("내용 : " + targetArticle.body);
-					System.out.println("작성자 : " + targetArticle.witer);
-					String str = targetArticle.date;
-					String[] arr = str.split(" ");
-					System.out.println("작성일 : " + arr[0]);
-					
-					System.out.println("조회수 : " + targetArticle.hit);
-				//}
+					print_articles(articles);
+				
+
+				}
+				// } else {
+
+				System.out.println("번호 : " + targetArticle.No);
+				System.out.println("제목 : " + targetArticle.title);
+				System.out.println("내용 : " + targetArticle.body);
+				System.out.println("작성자 : " + targetArticle.witer);
+				String str = targetArticle.date;
+				String[] arr = str.split(" ");
+				System.out.println("작성일 : " + arr[0]);
+
+				System.out.println("조회수 : " + targetArticle.hit);
+				// }
 			}
 
 			if (cmd.equals("update")) {
@@ -164,81 +156,140 @@ public class board1 {
 					System.out.println("==존재하지 않는 게시물번호입니다==");
 				}
 			}
-			
+
 			if (cmd.equals("search")) {
 				System.out.println("어떤 게시물을 검색하겠습니까? : 1.제목, 2.내용");
 				int searchFlag = Integer.parseInt(sc.nextLine());
 				System.out.println("검색어를 입력해주세요. ");
 				String keyword = sc.nextLine();
-				ArrayList <Article> searchedArticles = new ArrayList<>();
-				
-				if(searchFlag == 1) {
-					for(int i=0; i<articles.size(); i++) {
-						if(articles.get(i).title.contains(keyword)) {
-							searchedArticles.add(articles.get(i));
+				ArrayList<Article> searchedArticles = new ArrayList<>();
+
+//				if (searchFlag == 1) {
+//					for (int i = 0; i < articles.size(); i++) {
+//						if (articles.get(i).title.contains(keyword)) {
+//							searchedArticles.add(articles.get(i));
+//						}
+//					}
+//				} else if (searchFlag == 2) {
+//					for (int i = 0; i < articles.size(); i++) {
+//						if (articles.get(i).body.contains(keyword)) {
+//							searchedArticles.add(articles.get(i));
+//						}
+//					}
+//
+//				}
+				for(int i=0; i<articles.size();i++) {
+					if(articles.get(i).getPropertyByType(searchFlag).contains(keyword)) {
+						searchedArticles.add(articles.get(i));
+					}
+				}
+				print_articles(searchedArticles);
+
+			}
+
+			if (cmd.equals("detail")) {
+				System.out.println("게시물 번호를 입력해주세요.");
+				int articleNo = Integer.parseInt(sc.nextLine());
+				Article article = get_article_by_No(articleNo);
+
+				if (article == null) {
+					System.out.println("없는 게시물입니다.");
+				} else {
+					article.hit++;
+					print_article(article);
+					ArrayList<Reply> replies = get_replies_by_parent_No(articleNo);
+					print_replies(replies);
+					
+					while(true) {
+						System.out.println("무엇을 수행하시겠습니까? 1.댓글  2.좋아요  3.수정  4.삭제  5.뒤로가기");
+						int detailCmd = Integer.parseInt(sc.nextLine());
+						
+						if(detailCmd==1) {
+							int replyNo = lastReplyNo;
+							lastReplyNo++;
+							
+							System.out.println("댓글 내용을 입력해주세요.");
+							String replyBody= sc.nextLine();
+							String witer ="익명";
+							String date = Test.getCurrentDate();
+							
+							Reply new_reply = new Reply(replyNo, articleNo, replyBody, witer, date);
+							this.replies.add(new_reply);
+							System.out.println("댓글이 성공적으로 등록되었습니다.");
+							
+							print_article(article);
+							ArrayList<Reply> replies2 = get_replies_by_parent_No(articleNo);
+							print_replies(replies2);
+							
+						}else if(detailCmd==2) {
+							System.out.println("1. 좋아요   2.싫어요");
+							int LikeOrHate = Integer.parseInt(sc.nextLine());
+							article.set_likes_and_hates("cha1",LikeOrHate);
+							print_article(article);
+						}
+						
+						
+						
+						else if(detailCmd==5) {
+							break;
 						}
 					}
-				}else if (searchFlag == 2) {
-					for(int i=0; i<articles.size(); i++) {
-						if(articles.get(i).body.contains(keyword)) {
-							searchedArticles.add(articles.get(i));
-						}
 				}
-			
 
-		} 
-				print_articles(searchedArticles);
-		
 			}
-			
-		 if(cmd.equals("detail")) {
-			 System.out.println("게시물 번호를 입력해주세요.");
-			 int articleNo = Integer.parseInt(sc.nextLine());
-			 Article article = get_article_by_No(articleNo);
-			 
-			 if(article == null) {
-				 System.out.println("없는 게시물입니다.");
-			 }else {
-				 article.hit++;
-				 print_article(article);
-			 }
-			 
-			 
-		 }
-			
+
 		}
-		
-		
 
-	}
-
-	public static void print_article(Article article) {
-		System.out.println("===게시물 상세====");
-		System.out.println("번호 : "+ article.No);
-		System.out.println("제목 : "+ article.title);
-		System.out.println("내용 : "+ article.body);
-		System.out.println("조회수 : "+ article.hit);
-		
 	}
 	
-	public static void print_articles(ArrayList<Article> articles) {
-		System.out.println("===게시물 목록====");
-	for(int i=0; i<articles.size(); i++) {
-		System.out.println("번호 : "+ articles.get(i).No);
-		System.out.println("제목 : "+ articles.get(i).title);
-		
-		String str = articles.get(i).date;
-		String[] arr = str.split(" ");
-		System.out.println("작성일 : "+ arr[0]);
-		
-		System.out.println("조회수 : "+ articles.get(i).hit);
-		
-	 }
+	public ArrayList<Reply> get_replies_by_parent_No(int parent_No){
+		ArrayList<Reply> result = new ArrayList <Reply>();
+		for(int i=0; i<replies.size();i++) {
+			if(this.replies.get(i).parent_No==parent_No) {
+				result.add(this.replies.get(i));
+			}
+		}
+		return result;
 	}
-		
-		
-		
-	public static Article get_article_by_No(int No) {
+	
+	
+
+	public void print_replies(ArrayList<Reply> replies) {
+		System.out.println("=======댓글======");
+		for (int i = 0; i < replies.size(); i++) {
+			System.out.println(">>내용 : " + replies.get(i).body);
+			System.out.println("작성자 : " + replies.get(i).witer);
+			System.out.println("등록일 : " + replies.get(i).date);
+
+		}
+
+	}
+
+	public void print_article(Article article) {
+		System.out.println("===게시물 상세====");
+		System.out.println("번호 : " + article.No);
+		System.out.println("제목 : " + article.title);
+		System.out.println("내용 : " + article.body);
+		System.out.println("조회수 : " + article.hit);
+
+	}
+
+	public void print_articles(ArrayList<Article> articles) {
+		System.out.println("===게시물 목록====");
+		for (int i = 0; i < articles.size(); i++) {
+			System.out.println(">>>번호 : " + articles.get(i).No);
+			System.out.println("제목 : " + articles.get(i).title);
+
+			String str = articles.get(i).date;
+			String[] arr = str.split(" ");
+			System.out.println("작성일 : " + arr[0]);
+
+			System.out.println("조회수 : " + articles.get(i).hit);
+
+		}
+	}
+
+	public Article get_article_by_No(int No) {
 		Article article = null;
 		for (int i = 0; i < articles.size(); i++) {
 
@@ -253,28 +304,49 @@ public class board1 {
 
 	}
 
-}
+	public void make_test_data() {
+		
+	HashMap<String, Integer> likes1 = new HashMap<>();
+	likes1.put("cha1",1);
+	likes1.put("cha2", 2);
+	likes1.put("cha3",1);
+	
+	HashMap<String, Integer> likes2 = new HashMap<>();
+	likes2.put("cha1",2);
+	likes2.put("cha2",2);
+	likes2.put("cha3",2);
+	
+	HashMap<String, Integer> likes3 = new HashMap<>();
+	likes3.put("cha1",1);
+	likes3.put("cha2",1);
+	likes3.put("cha3",1);
+	
 
-class Article {
-	String title;
-	String body;
-	String witer;
-	int No;
-	String date;
-	int hit;
+		Article article1 = new Article();
+		article1.No = 1;
+		article1.title = "제목1";
+		article1.body = "내용1";
+		article1.witer = "작성자1";
+		article1.date = Test.getCurrentDate();
+		article1.hit = 20;
+		article1.LikesAndHates = likes1;
 
-	Article() {
+		Article article2 = new Article(2, "제목2", "내용2", "작성자2", Test.getCurrentDate(), 5, likes2);
+		Article article3 = new Article(3, "제목3", "내용3", "작성자3", Test.getCurrentDate(),30, likes3);
+
+		articles.add(article1);
+		articles.add(article2);
+		articles.add(article3);
+
+		lastArticleNo = 4;
+
+		Reply r1 = new Reply(1, 1, "댓글1", "작성자1", Test.getCurrentDate());
+		Reply r2 = new Reply(2, 1, "댓글2", "작성자2", Test.getCurrentDate());
+		Reply r3 = new Reply(3, 2, "댓글3", "작성자3", Test.getCurrentDate());
+
+		replies.add(r1);
+		replies.add(r2);
+		replies.add(r3);
 
 	}
-
-	Article(int No, String title, String body, String witer, String date, int hit) {
-		this.No = No;
-		this.title = title;
-		this.body = body;
-		this.witer = witer;
-		this.date = date;
-		this.hit = hit;
-
-	}
-
 }
